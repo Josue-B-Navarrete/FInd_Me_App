@@ -4,11 +4,15 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.location.Location
+import android.media.AudioManager
+import android.media.MediaPlayer
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Looper
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.myapplication.databinding.ActivityMapsBinding
 import com.google.android.gms.location.*
@@ -16,6 +20,7 @@ import com.google.android.gms.maps.*
 
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
+import java.io.IOException
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
@@ -24,10 +29,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private var client: FusedLocationProviderClient? = null
     private var locationRequest: LocationRequest? = null
     private var locationCallback: LocationCallback? = null
+    private var url: String = "http://docs.google.com/uc?export=download&id=1ktevKf_MTQN3Fl-sfCbMbreHnXD72ItU"
+    private lateinit var mediaPlayer: MediaPlayer
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         binding = ActivityMapsBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
@@ -38,6 +44,30 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
         if (hasLocationPermission()) {
             trackLocation()
+        }
+    }
+
+    private fun playTune() {
+        mediaPlayer!!.setAudioStreamType(AudioManager.STREAM_MUSIC)
+
+        if(!mediaPlayer!!.isPlaying){
+            Toast.makeText(this,"Tune is now playing",Toast.LENGTH_SHORT).show()
+            try{
+                mediaPlayer!!.setDataSource(url)
+                mediaPlayer.prepare()
+                mediaPlayer.start()
+            } catch (e: IOException){
+                e.printStackTrace()
+            }
+        } else {
+            Toast.makeText(this,"Tune has Stopped",Toast.LENGTH_SHORT).show()
+            try{
+                mediaPlayer.pause()
+                mediaPlayer.stop()
+                mediaPlayer.reset()
+            } catch (e: IOException){
+                e.printStackTrace()
+            }
         }
     }
 
@@ -76,7 +106,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             .title("Here you are!")
             .position(currentLatLng)
         googleMap.addMarker(markerOptions)
-
         // Move and zoom to current location at the street level
         val update: CameraUpdate =
             CameraUpdateFactory.newLatLngZoom(currentLatLng, 15f)
